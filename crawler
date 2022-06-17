@@ -1,0 +1,77 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import time
+import csv
+
+url = 'https://www.twse.com.tw/zh/page/trading/exchange/STOCK_DAY_AVG.html'
+dy = '//*[@id="d1"]/select[1]'
+y = ['民國 90 年','民國 91 年','民國 92 年','民國 93 年','民國 94 年','民國 95 年','民國 96 年','民國 97 年','民國 98 年','民國 99 年','民國 100 年','民國 101 年','民國 102 年','民國 103 年','民國 104 年','民國 105 年','民國 106 年','民國 107 年','民國 108 年','民國 109 年','民國 110 年','民國 111 年']
+dm = '//*[@id="d1"]/select[2]'
+m = ['01月','02月','03月','04月','05月','06月','07月','08月','09月','10月','11月','12月']
+stuck = '//*[@id="main-form"]/div/div/form/input'
+stuck_name = ['2330']
+sb = '//*[@id="main-form"]/div/div/form/a[2]'
+#,'2454','2313','2303','2308','2881','2882','2891','1303','1301','2412','2002','2886','2884','2603','3711','5871','1216','3037','2883','2885','2892','5880','1101','1326','2357','3034','2880','2382','2887','6415','2609','2379','2327','2615','3008','2207','2409','3045','5796','2395','1590','2912','6505','2801','4904','8046','9910','2408','8454'
+#body_d = ' #report-table > tbody > tr[]'
+#body_d = ''
+
+#1 //*[@id="report-table"]/tbody/tr[1]/td[1]
+#2 //*[@id="report-table"]/tbody/tr[2]/td[1]
+#3/html/body/div[1]/div[1]/div/div/main/div[4]/div[3]/div/table/tbody/tr[1]/td[1]
+
+driver = webdriver.Chrome()
+driver.get(url)
+'''
+driver.find_element(By.XPATH,dy).send_keys(y[0])
+driver.find_element(By.XPATH,dm).send_keys(m[0])
+driver.find_element(By.XPATH,stuck).click()
+driver.find_element(By.XPATH,stuck).send_keys(stuck_name)
+driver.find_element(By.XPATH,sb).click()
+'''
+
+
+
+#driver.find_element(By.XPATH,stuck).click()
+#driver.find_element(By.XPATH,stuck).send_keys(stuck_name[0])
+
+
+with open('stock10day.csv','w',newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow(['date','Closing price'])
+    time.sleep(1)
+    #print(driver.find_element(By.XPATH,'/html/body/div[1]/div[1]/div/div/main/div[4]/div[3]/div/table/tbody/tr[1]/td[1]').text)
+    for h in range(0,len(stuck_name)):
+        for i in range(20,21):
+            for j in range(11,12):
+                driver.find_element(By.XPATH,stuck).click()
+                driver.find_element(By.XPATH,stuck).clear()
+                driver.find_element(By.XPATH,dy).send_keys(y[i])
+                driver.find_element(By.XPATH,dm).send_keys(m[j])
+                driver.find_element(By.XPATH,stuck).click()
+                driver.find_element(By.XPATH,stuck).send_keys(stuck_name[0])
+                driver.find_element(By.XPATH,sb).click()
+                time.sleep(6)
+                for k in range(13,32):
+                    time.sleep(0.0125)
+                    try:
+                        date = driver.find_element(By.XPATH,'//*[@id="report-table"]/tbody/tr[' + str(k) + ']/td[1]').text
+                        money = driver.find_element(By.XPATH,'//*[@id="report-table"]/tbody/tr[' + str(k) + ']/td[2]').text
+                        print(date)
+                        print(money)
+                        if date != '月平均收盤價' and money != '--':
+                            date = date.split('/')
+                            if ',' not in money:
+                                writer.writerow([str(int(date[0])+1911)+'/'+date[1]+'/'+date[2],money])
+                                print('修正:',str(int(date[0])+1911)+'/'+date[1]+'/'+date[2],money)
+                            elif ',' in money:
+                                new_money = ""
+                                money = money.split(',')
+                                for n in money:
+                                    new_money += n
+                                writer.writerow([str(int(date[0])+1911)+'/'+date[1]+'/'+date[2],new_money])
+                                print('修正:',str(int(date[0])+1911)+'/'+date[1]+'/'+date[2],new_money)
+                    except:
+                        break
+
+
+
